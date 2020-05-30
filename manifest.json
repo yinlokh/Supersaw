@@ -10,7 +10,7 @@
         "name" : "Supersaw",
         "num_param" : 6,
         "params" : [
-            ["Voices",    0, 11, ""],
+            ["Voices",    0, 12, ""],
             ["Detune",    0, 50, ""],
             ["Noise Lvl",     0, 100, "%"],
             ["Waveform",    0, 1, ""],

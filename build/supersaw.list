@@ -114,8 +114,8 @@ void _entry(uint32_t platform, uint32_t api)
 20000086:	f000 f80b 	bl	200000a0 <_hook_init>
 2000008a:	e8bd 81f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, pc}
 2000008e:	bf00      	nop
-20000090:	200003c7 	.word	0x200003c7
-20000094:	2000047b 	.word	0x2000047b
+20000090:	2000040f 	.word	0x2000040f
+20000094:	200004c3 	.word	0x200004c3
 20000098:	20000040 	.word	0x20000040
 2000009c:	20000040 	.word	0x20000040
 
@@ -179,7 +179,7 @@ void OSC_INIT(uint32_t platform, uint32_t api)
   s_state.waveform = 0;
 200000bc:	7719      	strb	r1, [r3, #28]
 200000be:	4770      	bx	lr
-200000c0:	200003c8 	.word	0x200003c8
+200000c0:	20000410 	.word	0x20000410
 
 200000c4 <_hook_cycle>:
 }
@@ -190,7 +190,7 @@ void OSC_CYCLE(const user_osc_param_t * const params,
 {  
 200000c4:	e92d 4ff0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, lr}
   const uint8_t flags = s_state.flags;
-200000c8:	4c97      	ldr	r4, [pc, #604]	; (20000328 <_hook_cycle+0x264>)
+200000c8:	4c8b      	ldr	r4, [pc, #556]	; (200002f8 <_hook_cycle+0x234>)
   s_state.flags = k_flags_none;
   
   const float drive = s_state.drive;
@@ -203,645 +203,684 @@ void OSC_CYCLE(const user_osc_param_t * const params,
                const uint32_t frames)
 {  
   const uint8_t flags = s_state.flags;
-200000ce:	f894 900c 	ldrb.w	r9, [r4, #12]
-200000d2:	7c25      	ldrb	r5, [r4, #16]
-200000d4:	4f95      	ldr	r7, [pc, #596]	; (2000032c <_hook_cycle+0x268>)
+200000ce:	f894 800c 	ldrb.w	r8, [r4, #12]
+  const float lfo_inc = (lfo - lfoz) / frames;
+  
+  q31_t * __restrict y = (q31_t *)yn;
+  const q31_t * y_e = y + frames;
+
+  uint8_t voices = s_state.voices;
+200000d2:	f8d4 9010 	ldr.w	r9, [r4, #16]
    *
    * @param note Note in [0-151] range.
    * @return     Corresponding Hertz value.
    */
   __fast_inline float osc_notehzf(uint8_t note) {
     return midi_to_hz_lut_f[clipmaxu32(note,k_midi_to_hz_size-1)];
-200000d6:	f8df b25c 	ldr.w	fp, [pc, #604]	; 20000334 <_hook_cycle+0x270>
-  s_state.flags = k_flags_none;
-200000da:	2300      	movs	r3, #0
-  
-  const float drive = s_state.drive;
-
-  const float lfo = s_state.lfo = q31_to_f32(params->shape_lfo);
-200000dc:	eefa 7ae0 	vcvt.f32.s32	s15, s15, #31
+200000d6:	f8df b244 	ldr.w	fp, [pc, #580]	; 2000031c <_hook_cycle+0x258>
+200000da:	4f88      	ldr	r7, [pc, #544]	; (200002fc <_hook_cycle+0x238>)
 void OSC_CYCLE(const user_osc_param_t * const params,
                int32_t *yn,
                const uint32_t frames)
 {  
   const uint8_t flags = s_state.flags;
   s_state.flags = k_flags_none;
-200000e0:	7323      	strb	r3, [r4, #12]
+200000dc:	2300      	movs	r3, #0
+  
+  const float drive = s_state.drive;
+
+  const float lfo = s_state.lfo = q31_to_f32(params->shape_lfo);
+200000de:	eefa 7ae0 	vcvt.f32.s32	s15, s15, #31
+void OSC_CYCLE(const user_osc_param_t * const params,
+               int32_t *yn,
+               const uint32_t frames)
+{  
+  const uint8_t flags = s_state.flags;
+  s_state.flags = k_flags_none;
+200000e2:	7323      	strb	r3, [r4, #12]
   
   const float drive = s_state.drive;
 
   const float lfo = s_state.lfo = q31_to_f32(params->shape_lfo);
   float lfoz = (flags & k_flag_reset) ? lfo : s_state.lfoz;
-200000e2:	f019 0301 	ands.w	r3, r9, #1
+200000e4:	f018 0301 	ands.w	r3, r8, #1
 }
 
 void OSC_CYCLE(const user_osc_param_t * const params,
                int32_t *yn,
                const uint32_t frames)
 {  
-200000e6:	ed2d 8b08 	vpush	{d8-d11}
+200000e8:	ed2d 8b08 	vpush	{d8-d11}
   
   const float drive = s_state.drive;
 
   const float lfo = s_state.lfo = q31_to_f32(params->shape_lfo);
   float lfoz = (flags & k_flag_reset) ? lfo : s_state.lfoz;
   const float lfo_inc = (lfo - lfoz) / frames;
-200000ea:	ee07 2a10 	vmov	s14, r2
+200000ec:	ee07 2a10 	vmov	s14, r2
   s_state.flags = k_flags_none;
   
   const float drive = s_state.drive;
 
   const float lfo = s_state.lfo = q31_to_f32(params->shape_lfo);
   float lfoz = (flags & k_flag_reset) ? lfo : s_state.lfoz;
-200000ee:	bf08      	it	eq
-200000f0:	ed94 aa02 	vldreq	s20, [r4, #8]
+200000f0:	bf08      	it	eq
+200000f2:	ed94 aa02 	vldreq	s20, [r4, #8]
   const uint8_t flags = s_state.flags;
   s_state.flags = k_flags_none;
   
   const float drive = s_state.drive;
 
   const float lfo = s_state.lfo = q31_to_f32(params->shape_lfo);
-200000f4:	edc4 7a01 	vstr	s15, [r4, #4]
+200000f6:	edc4 7a01 	vstr	s15, [r4, #4]
   float lfoz = (flags & k_flag_reset) ? lfo : s_state.lfoz;
-200000f8:	bf18      	it	ne
-200000fa:	eeb0 aa67 	vmovne.f32	s20, s15
+200000fa:	bf18      	it	ne
+200000fc:	eeb0 aa67 	vmovne.f32	s20, s15
   const float lfo_inc = (lfo - lfoz) / frames;
-200000fe:	ee77 7aca 	vsub.f32	s15, s15, s20
-20000102:	eeb8 7a47 	vcvt.f32.u32	s14, s14
+20000100:	ee77 7aca 	vsub.f32	s15, s15, s20
+20000104:	eeb8 7a47 	vcvt.f32.u32	s14, s14
 }
 
 void OSC_CYCLE(const user_osc_param_t * const params,
                int32_t *yn,
                const uint32_t frames)
 {  
-20000106:	b085      	sub	sp, #20
+20000108:	b085      	sub	sp, #20
   
   const float drive = s_state.drive;
 
   const float lfo = s_state.lfo = q31_to_f32(params->shape_lfo);
   float lfoz = (flags & k_flag_reset) ? lfo : s_state.lfoz;
   const float lfo_inc = (lfo - lfoz) / frames;
-20000108:	eec7 8a87 	vdiv.f32	s17, s15, s14
+2000010a:	ee87 8a87 	vdiv.f32	s16, s15, s14
   s_state.flags = k_flags_none;
   
   const float drive = s_state.drive;
 
   const float lfo = s_state.lfo = q31_to_f32(params->shape_lfo);
   float lfoz = (flags & k_flag_reset) ? lfo : s_state.lfoz;
-2000010c:	9302      	str	r3, [sp, #8]
+2000010e:	9301      	str	r3, [sp, #4]
   const float lfo_inc = (lfo - lfoz) / frames;
-  
-  q31_t * __restrict y = (q31_t *)yn;
-  const q31_t * y_e = y + frames;
-2000010e:	eb01 0982 	add.w	r9, r1, r2, lsl #2
-
-  uint8_t voices = s_state.voices;
-  uint8_t detune = s_state.detune;
-20000112:	6963      	ldr	r3, [r4, #20]
-
-  // reset instances phase increment and phase
-  int i;
-  float mid = voices / 2.f;
-  for (i = 0; i < voices && i < maxVoice; i++) {
-20000114:	4a86      	ldr	r2, [pc, #536]	; (20000330 <_hook_cycle+0x26c>)
   
   q31_t * __restrict y = (q31_t *)yn;
   const q31_t * y_e = y + frames;
 
   uint8_t voices = s_state.voices;
+20000110:	fa5f f389 	uxtb.w	r3, r9
+  const float lfo = s_state.lfo = q31_to_f32(params->shape_lfo);
+  float lfoz = (flags & k_flag_reset) ? lfo : s_state.lfoz;
+  const float lfo_inc = (lfo - lfoz) / frames;
+  
+  q31_t * __restrict y = (q31_t *)yn;
+  const q31_t * y_e = y + frames;
+20000114:	eb01 0882 	add.w	r8, r1, r2, lsl #2
+  uint8_t voices = s_state.voices;
   uint8_t detune = s_state.detune;
-20000116:	9301      	str	r3, [sp, #4]
+
+  // reset instances phase increment and phase
+  int i;
+  for (i = 0; i < voices && i < maxVoice; i++) {
+20000118:	4a79      	ldr	r2, [pc, #484]	; (20000300 <_hook_cycle+0x23c>)
 }
 
 void OSC_CYCLE(const user_osc_param_t * const params,
                int32_t *yn,
                const uint32_t frames)
 {  
-20000118:	4682      	mov	sl, r0
-2000011a:	4688      	mov	r8, r1
-2000011c:	426e      	negs	r6, r5
+2000011a:	460e      	mov	r6, r1
+2000011c:	4682      	mov	sl, r0
   uint8_t voices = s_state.voices;
   uint8_t detune = s_state.detune;
 
   // reset instances phase increment and phase
   int i;
-  float mid = voices / 2.f;
-2000011e:	ee07 5a90 	vmov	s15, r5
-20000122:	eef8 9ae7 	vcvt.f32.s32	s19, s15
-20000126:	eeb6 8a00 	vmov.f32	s16, #96	; 0x3f000000  0.5
+  for (i = 0; i < voices && i < maxVoice; i++) {
+2000011e:	2500      	movs	r5, #0
+20000120:	4659      	mov	r1, fp
+  const float lfo_inc = (lfo - lfoz) / frames;
+  
+  q31_t * __restrict y = (q31_t *)yn;
+  const q31_t * y_e = y + frames;
+
+  uint8_t voices = s_state.voices;
+20000122:	ee09 3a10 	vmov	s18, r3
                const uint32_t frames)
 {  
   const uint8_t flags = s_state.flags;
   s_state.flags = k_flags_none;
   
   const float drive = s_state.drive;
-2000012a:	ed94 9a00 	vldr	s18, [r4]
+20000126:	edd4 8a00 	vldr	s17, [r4]
+  
+  q31_t * __restrict y = (q31_t *)yn;
+  const q31_t * y_e = y + frames;
+
   uint8_t voices = s_state.voices;
   uint8_t detune = s_state.detune;
+2000012a:	6963      	ldr	r3, [r4, #20]
+2000012c:	9300      	str	r3, [sp, #0]
+2000012e:	fa5f f089 	uxtb.w	r0, r9
 
   // reset instances phase increment and phase
   int i;
-  float mid = voices / 2.f;
-2000012e:	ee69 9a88 	vmul.f32	s19, s19, s16
-20000132:	19a9      	adds	r1, r5, r6
   for (i = 0; i < voices && i < maxVoice; i++) {
-20000134:	b116      	cbz	r6, 2000013c <_hook_cycle+0x78>
-20000136:	6813      	ldr	r3, [r2, #0]
-20000138:	428b      	cmp	r3, r1
-2000013a:	dc02      	bgt.n	20000142 <_hook_cycle+0x7e>
+20000132:	4285      	cmp	r5, r0
+20000134:	db05      	blt.n	20000142 <_hook_cycle+0x7e>
+20000136:	eef7 9a00 	vmov.f32	s19, #112	; 0x3f800000  1.0
   }
   
   // write to buffer
   for (; y != y_e; ) {
 	float totalSig = 0.0f;
 	for (i = 0; i < voices && i < maxVoice; i++) {
-2000013c:	4e7c      	ldr	r6, [pc, #496]	; (20000330 <_hook_cycle+0x26c>)
-		float phase = instances[i].phase;
-		totalSig += generate(s_state.waveform, phase) * instances[i].level * (1 / voices);
-2000013e:	2701      	movs	r7, #1
-20000140:	e0d1      	b.n	200002e6 <_hook_cycle+0x222>
+2000013a:	4d71      	ldr	r5, [pc, #452]	; (20000300 <_hook_cycle+0x23c>)
+2000013c:	eef0 ba69 	vmov.f32	s23, s19
+20000140:	e0b8      	b.n	200002b4 <_hook_cycle+0x1f0>
+  uint8_t voices = s_state.voices;
+  uint8_t detune = s_state.detune;
+
   // reset instances phase increment and phase
   int i;
-  float mid = voices / 2.f;
   for (i = 0; i < voices && i < maxVoice; i++) {
+20000142:	6813      	ldr	r3, [r2, #0]
+20000144:	429d      	cmp	r5, r3
+20000146:	daf6      	bge.n	20000136 <_hook_cycle+0x72>
 		int32_t fineAdj = (i - voices >> 1) * detune;
 		uint16_t voicePitch = adjustPitch(params->pitch, fineAdj);
-20000142:	f8ba 3004 	ldrh.w	r3, [sl, #4]
+20000148:	f8ba c004 	ldrh.w	ip, [sl, #4]
 	uint8_t pitch = note >> 8; 
 	uint8_t mod = note & 0xFF;
 	uint16_t res = 0;
 
 	// apply fine adjustment
 	int32_t pitchChange = (fineAdjust + mod) / 255;
-20000146:	f89d e004 	ldrb.w	lr, [sp, #4]
-  for (i = 0; i < voices && i < maxVoice; i++) {
-		int32_t fineAdj = (i - voices >> 1) * detune;
-		uint16_t voicePitch = adjustPitch(params->pitch, fineAdj);
-		instances[i].level = (i > mid) ? mid - i : i - mid;
-		instances[i].level = (instances[i].level + mid) / mid;
-		instances[i].level = instances[i].level * s_state.sideLevel + (1.f - s_state.sideLevel);
-2000014a:	ed94 7a08 	vldr	s14, [r4, #32]
-  int i;
-  float mid = voices / 2.f;
-  for (i = 0; i < voices && i < maxVoice; i++) {
-		int32_t fineAdj = (i - voices >> 1) * detune;
-		uint16_t voicePitch = adjustPitch(params->pitch, fineAdj);
-		instances[i].level = (i > mid) ? mid - i : i - mid;
-2000014e:	ee07 1a90 	vmov	s15, r1
-}
-
-__fast_inline uint16_t adjustPitch(uint16_t note, int32_t fineAdjust) {
-	// high byte = note number, low byte = fine
-	// mod 0 - 255 only adds to original pitch, negative mod applied as note - 1 + (255 + mod)
-	uint8_t pitch = note >> 8; 
-20000152:	ea4f 2c13 	mov.w	ip, r3, lsr #8
-  int i;
-  float mid = voices / 2.f;
-  for (i = 0; i < voices && i < maxVoice; i++) {
-		int32_t fineAdj = (i - voices >> 1) * detune;
-		uint16_t voicePitch = adjustPitch(params->pitch, fineAdj);
-		instances[i].level = (i > mid) ? mid - i : i - mid;
-20000156:	eef8 7ae7 	vcvt.f32.s32	s15, s15
-	uint8_t pitch = note >> 8; 
-	uint8_t mod = note & 0xFF;
-	uint16_t res = 0;
-
-	// apply fine adjustment
-	int32_t pitchChange = (fineAdjust + mod) / 255;
-2000015a:	b2db      	uxtb	r3, r3
-2000015c:	1070      	asrs	r0, r6, #1
-2000015e:	fb0e 3000 	mla	r0, lr, r0, r3
-20000162:	23ff      	movs	r3, #255	; 0xff
-20000164:	fb90 f3f3 	sdiv	r3, r0, r3
-	int32_t adjustedMod = (fineAdjust + mod) % 255;
-20000168:	ebc3 2e03 	rsb	lr, r3, r3, lsl #8
-  int i;
-  float mid = voices / 2.f;
-  for (i = 0; i < voices && i < maxVoice; i++) {
-		int32_t fineAdj = (i - voices >> 1) * detune;
-		uint16_t voicePitch = adjustPitch(params->pitch, fineAdj);
-		instances[i].level = (i > mid) ? mid - i : i - mid;
-2000016c:	eef4 9ae7 	vcmpe.f32	s19, s15
-	uint16_t res = 0;
-
-	// apply fine adjustment
-	int32_t pitchChange = (fineAdjust + mod) / 255;
-	int32_t adjustedMod = (fineAdjust + mod) % 255;
-	if (adjustedMod < 0) {
-20000170:	ebb0 000e 	subs.w	r0, r0, lr
-		pitchChange--;
-20000174:	bf44      	itt	mi
-20000176:	f103 33ff 	addmi.w	r3, r3, #4294967295
-		adjustedMod += 0xFF;
-2000017a:	30ff      	addmi	r0, #255	; 0xff
-  int i;
-  float mid = voices / 2.f;
-  for (i = 0; i < voices && i < maxVoice; i++) {
-		int32_t fineAdj = (i - voices >> 1) * detune;
-		uint16_t voicePitch = adjustPitch(params->pitch, fineAdj);
-		instances[i].level = (i > mid) ? mid - i : i - mid;
-2000017c:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
-20000180:	bf4c      	ite	mi
-20000182:	ee79 7ae7 	vsubmi.f32	s15, s19, s15
-20000186:	ee77 7ae9 	vsubpl.f32	s15, s15, s19
-		adjustedMod += 0xFF;
-	} 
-	pitch += pitchChange;
-	mod = adjustedMod;
-
-	res = pitch;
-2000018a:	4463      	add	r3, ip
-  for (i = 0; i < voices && i < maxVoice; i++) {
-		int32_t fineAdj = (i - voices >> 1) * detune;
-		uint16_t voicePitch = adjustPitch(params->pitch, fineAdj);
-		instances[i].level = (i > mid) ? mid - i : i - mid;
-		instances[i].level = (instances[i].level + mid) / mid;
-		instances[i].level = instances[i].level * s_state.sideLevel + (1.f - s_state.sideLevel);
-2000018c:	ee77 7aa9 	vadd.f32	s15, s15, s19
-	pitch += pitchChange;
-	mod = adjustedMod;
-
-	res = pitch;
-	res = res << 8;
-	res |= mod;
-20000190:	ea40 2003 	orr.w	r0, r0, r3, lsl #8
-  for (i = 0; i < voices && i < maxVoice; i++) {
-		int32_t fineAdj = (i - voices >> 1) * detune;
-		uint16_t voicePitch = adjustPitch(params->pitch, fineAdj);
-		instances[i].level = (i > mid) ? mid - i : i - mid;
-		instances[i].level = (instances[i].level + mid) / mid;
-		instances[i].level = instances[i].level * s_state.sideLevel + (1.f - s_state.sideLevel);
-20000194:	eec7 6aa9 	vdiv.f32	s13, s15, s19
-	pitch += pitchChange;
-	mod = adjustedMod;
-
-	res = pitch;
-	res = res << 8;
-	res |= mod;
-20000198:	b280      	uxth	r0, r0
-		int32_t fineAdj = (i - voices >> 1) * detune;
-		uint16_t voicePitch = adjustPitch(params->pitch, fineAdj);
-		instances[i].level = (i > mid) ? mid - i : i - mid;
-		instances[i].level = (instances[i].level + mid) / mid;
-		instances[i].level = instances[i].level * s_state.sideLevel + (1.f - s_state.sideLevel);
-		instances[i].w0 = osc_w0f_for_note(voicePitch >> 8, voicePitch & 0xFF);
-2000019a:	ea4f 2c20 	mov.w	ip, r0, asr #8
-2000019e:	f1bc 0f96 	cmp.w	ip, #150	; 0x96
-200001a2:	bfd4      	ite	le
-200001a4:	4663      	movle	r3, ip
-200001a6:	2397      	movgt	r3, #151	; 0x97
-200001a8:	b2c0      	uxtb	r0, r0
-   * @param note Note in [0-151] range, mod in [0-255] range.
-   * @return     Corresponding 0-1 phase increment in floating point.
-   */
-  __fast_inline float osc_w0f_for_note(uint8_t note, uint8_t mod) {    
-    const float f0 = osc_notehzf(note);
-    const float f1 = osc_notehzf(note+1);
-200001aa:	f10c 0c01 	add.w	ip, ip, #1
-200001ae:	f00c 0cff 	and.w	ip, ip, #255	; 0xff
-   *
-   * @param note Note in [0-151] range.
-   * @return     Corresponding Hertz value.
-   */
-  __fast_inline float osc_notehzf(uint8_t note) {
-    return midi_to_hz_lut_f[clipmaxu32(note,k_midi_to_hz_size-1)];
-200001b2:	eb0b 0383 	add.w	r3, fp, r3, lsl #2
-200001b6:	f1bc 0f96 	cmp.w	ip, #150	; 0x96
-200001ba:	bf88      	it	hi
-200001bc:	f04f 0c97 	movhi.w	ip, #151	; 0x97
-  for (i = 0; i < voices && i < maxVoice; i++) {
-		int32_t fineAdj = (i - voices >> 1) * detune;
-		uint16_t voicePitch = adjustPitch(params->pitch, fineAdj);
-		instances[i].level = (i > mid) ? mid - i : i - mid;
-		instances[i].level = (instances[i].level + mid) / mid;
-		instances[i].level = instances[i].level * s_state.sideLevel + (1.f - s_state.sideLevel);
-200001c0:	eef7 7a00 	vmov.f32	s15, #112	; 0x3f800000  1.0
-200001c4:	ee77 7ac7 	vsub.f32	s15, s15, s14
-200001c8:	eee6 7a87 	vfma.f32	s15, s13, s14
-200001cc:	ed93 7a00 	vldr	s14, [r3]
-200001d0:	edc7 7a01 	vstr	s15, [r7, #4]
+2000014c:	f89d 3000 	ldrb.w	r3, [sp]
 
 /** Linear interpolation
  */
 static inline __attribute__((optimize("Ofast"), always_inline))
 float linintf(const float fr, const float x0, const float x1) {
   return x0 + fr * (x1 - x0);
-200001d4:	ee07 0a90 	vmov	s15, r0
-200001d8:	4b56      	ldr	r3, [pc, #344]	; (20000334 <_hook_cycle+0x270>)
-200001da:	eddf 6a57 	vldr	s13, [pc, #348]	; 20000338 <_hook_cycle+0x274>
-200001de:	eef8 7ae7 	vcvt.f32.s32	s15, s15
-200001e2:	eb03 0c8c 	add.w	ip, r3, ip, lsl #2
-200001e6:	ee67 7aa6 	vmul.f32	s15, s15, s13
-200001ea:	eddc 6a00 	vldr	s13, [ip]
+20000150:	eddf 6a6c 	vldr	s13, [pc, #432]	; 20000304 <_hook_cycle+0x240>
+20000154:	1a28      	subs	r0, r5, r0
+}
+
+__fast_inline uint16_t adjustPitch(uint16_t note, int32_t fineAdjust) {
+	// high byte = note number, low byte = fine
+	// mod 0 - 255 only adds to original pitch, negative mod applied as note - 1 + (255 + mod)
+	uint8_t pitch = note >> 8; 
+20000156:	ea4f 2e1c 	mov.w	lr, ip, lsr #8
+	uint8_t mod = note & 0xFF;
+	uint16_t res = 0;
+
+	// apply fine adjustment
+	int32_t pitchChange = (fineAdjust + mod) / 255;
+2000015a:	1040      	asrs	r0, r0, #1
+2000015c:	fa5f fc8c 	uxtb.w	ip, ip
+20000160:	fb03 c000 	mla	r0, r3, r0, ip
+20000164:	23ff      	movs	r3, #255	; 0xff
+20000166:	fb90 f3f3 	sdiv	r3, r0, r3
+	int32_t adjustedMod = (fineAdjust + mod) % 255;
+2000016a:	ebc3 2c03 	rsb	ip, r3, r3, lsl #8
+	if (adjustedMod < 0) {
+2000016e:	ebb0 000c 	subs.w	r0, r0, ip
+		pitchChange--;
+20000172:	bf48      	it	mi
+20000174:	f103 33ff 	addmi.w	r3, r3, #4294967295
+		adjustedMod += 0xFF;
+	} 
+	pitch += pitchChange;
+	mod = adjustedMod;
+
+	res = pitch;
+20000178:	4473      	add	r3, lr
+	// apply fine adjustment
+	int32_t pitchChange = (fineAdjust + mod) / 255;
+	int32_t adjustedMod = (fineAdjust + mod) % 255;
+	if (adjustedMod < 0) {
+		pitchChange--;
+		adjustedMod += 0xFF;
+2000017a:	bf48      	it	mi
+2000017c:	30ff      	addmi	r0, #255	; 0xff
+	pitch += pitchChange;
+	mod = adjustedMod;
+
+	res = pitch;
+	res = res << 8;
+	res |= mod;
+2000017e:	ea40 2003 	orr.w	r0, r0, r3, lsl #8
+20000182:	b280      	uxth	r0, r0
+  // reset instances phase increment and phase
+  int i;
+  for (i = 0; i < voices && i < maxVoice; i++) {
+		int32_t fineAdj = (i - voices >> 1) * detune;
+		uint16_t voicePitch = adjustPitch(params->pitch, fineAdj);
 		instances[i].w0 = osc_w0f_for_note(voicePitch >> 8, voicePitch & 0xFF);
+20000184:	1203      	asrs	r3, r0, #8
+20000186:	2b96      	cmp	r3, #150	; 0x96
+20000188:	bfd8      	it	le
+2000018a:	469e      	movle	lr, r3
+2000018c:	b2c0      	uxtb	r0, r0
+   * @param note Note in [0-151] range, mod in [0-255] range.
+   * @return     Corresponding 0-1 phase increment in floating point.
+   */
+  __fast_inline float osc_w0f_for_note(uint8_t note, uint8_t mod) {    
+    const float f0 = osc_notehzf(note);
+    const float f1 = osc_notehzf(note+1);
+2000018e:	f103 0301 	add.w	r3, r3, #1
+20000192:	b2db      	uxtb	r3, r3
+20000194:	ee07 0a90 	vmov	s15, r0
+   *
+   * @param note Note in [0-151] range.
+   * @return     Corresponding Hertz value.
+   */
+  __fast_inline float osc_notehzf(uint8_t note) {
+    return midi_to_hz_lut_f[clipmaxu32(note,k_midi_to_hz_size-1)];
+20000198:	bfc8      	it	gt
+2000019a:	f04f 0e97 	movgt.w	lr, #151	; 0x97
+2000019e:	2b96      	cmp	r3, #150	; 0x96
+200001a0:	bf88      	it	hi
+200001a2:	2397      	movhi	r3, #151	; 0x97
+200001a4:	eef8 7ae7 	vcvt.f32.s32	s15, s15
+200001a8:	eb01 0383 	add.w	r3, r1, r3, lsl #2
+200001ac:	eb0b 0e8e 	add.w	lr, fp, lr, lsl #2
+200001b0:	ee67 7aa6 	vmul.f32	s15, s15, s13
+200001b4:	ed9e 7a00 	vldr	s14, [lr]
+200001b8:	edd3 6a00 	vldr	s13, [r3]
 		if (flags & k_flag_reset) {
-200001ee:	9b02      	ldr	r3, [sp, #8]
-200001f0:	ee76 6ac7 	vsub.f32	s13, s13, s14
-200001f4:	eea7 7aa6 	vfma.f32	s14, s15, s13
+200001bc:	9b01      	ldr	r3, [sp, #4]
+200001be:	ee76 6ac7 	vsub.f32	s13, s13, s14
+200001c2:	eea7 7aa6 	vfma.f32	s14, s15, s13
 
 /** FSEL construct
  */
 static inline __attribute__((optimize("Ofast"),always_inline))
 float fsel(const float a, const float b, const float c) {
   return (a >= 0) ? b : c;
-200001f8:	eddf 7a50 	vldr	s15, [pc, #320]	; 2000033c <_hook_cycle+0x278>
-200001fc:	eeb4 7ae7 	vcmpe.f32	s14, s15
-20000200:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
-20000204:	bfb8      	it	lt
-20000206:	eef0 7a47 	vmovlt.f32	s15, s14
+200001c6:	eddf 7a50 	vldr	s15, [pc, #320]	; 20000308 <_hook_cycle+0x244>
+200001ca:	eeb4 7ae7 	vcmpe.f32	s14, s15
+200001ce:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
+200001d2:	bfb8      	it	lt
+200001d4:	eef0 7a47 	vmovlt.f32	s15, s14
+  // reset instances phase increment and phase
+  int i;
+  for (i = 0; i < voices && i < maxVoice; i++) {
 		int32_t fineAdj = (i - voices >> 1) * detune;
 		uint16_t voicePitch = adjustPitch(params->pitch, fineAdj);
-		instances[i].level = (i > mid) ? mid - i : i - mid;
-		instances[i].level = (instances[i].level + mid) / mid;
-		instances[i].level = instances[i].level * s_state.sideLevel + (1.f - s_state.sideLevel);
 		instances[i].w0 = osc_w0f_for_note(voicePitch >> 8, voicePitch & 0xFF);
-2000020a:	ed9f 7a4d 	vldr	s14, [pc, #308]	; 20000340 <_hook_cycle+0x27c>
-2000020e:	ee67 7a87 	vmul.f32	s15, s15, s14
-20000212:	edc7 7a00 	vstr	s15, [r7]
+200001d8:	ed9f 7a4c 	vldr	s14, [pc, #304]	; 2000030c <_hook_cycle+0x248>
+200001dc:	ee67 7a87 	vmul.f32	s15, s15, s14
+200001e0:	edc7 7a00 	vstr	s15, [r7]
 		if (flags & k_flag_reset) {
-20000216:	b15b      	cbz	r3, 20000230 <_hook_cycle+0x16c>
+200001e4:	b16b      	cbz	r3, 20000202 <_hook_cycle+0x13e>
 			instances[i].phase = s_state.phaseSync ? 0.f : osc_white();
-20000218:	f994 301d 	ldrsb.w	r3, [r4, #29]
-2000021c:	b923      	cbnz	r3, 20000228 <_hook_cycle+0x164>
-2000021e:	9203      	str	r2, [sp, #12]
+200001e6:	f994 301d 	ldrsb.w	r3, [r4, #29]
+200001ea:	b933      	cbnz	r3, 200001fa <_hook_cycle+0x136>
+200001ec:	9103      	str	r1, [sp, #12]
+200001ee:	9202      	str	r2, [sp, #8]
    * @return     Value in [-1.0, 1.0].
    */
   float _osc_white(void);
 
   __fast_inline float osc_white(void) {
     return _osc_white();
-20000220:	f000 f8c8 	bl	200003b4 <___osc_white_veneer>
-20000224:	9a03      	ldr	r2, [sp, #12]
-20000226:	e001      	b.n	2000022c <_hook_cycle+0x168>
-20000228:	ed9f 0a46 	vldr	s0, [pc, #280]	; 20000344 <_hook_cycle+0x280>
-2000022c:	ed07 0a01 	vstr	s0, [r7, #-4]
-20000230:	370c      	adds	r7, #12
-20000232:	3601      	adds	r6, #1
+200001f0:	f000 f906 	bl	20000400 <___osc_white_veneer>
+200001f4:	9a02      	ldr	r2, [sp, #8]
+200001f6:	9903      	ldr	r1, [sp, #12]
+200001f8:	e001      	b.n	200001fe <_hook_cycle+0x13a>
+200001fa:	ed9f 0a45 	vldr	s0, [pc, #276]	; 20000310 <_hook_cycle+0x24c>
+200001fe:	ed07 0a01 	vstr	s0, [r7, #-4]
+  uint8_t voices = s_state.voices;
   uint8_t detune = s_state.detune;
 
   // reset instances phase increment and phase
   int i;
-  float mid = voices / 2.f;
   for (i = 0; i < voices && i < maxVoice; i++) {
-20000234:	e77d      	b.n	20000132 <_hook_cycle+0x6e>
+20000202:	3501      	adds	r5, #1
+20000204:	370c      	adds	r7, #12
+20000206:	e792      	b.n	2000012e <_hook_cycle+0x6a>
   }
   
   // write to buffer
   for (; y != y_e; ) {
 	float totalSig = 0.0f;
 	for (i = 0; i < voices && i < maxVoice; i++) {
-20000236:	428a      	cmp	r2, r1
-20000238:	da27      	bge.n	2000028a <_hook_cycle+0x1c6>
+20000208:	428a      	cmp	r2, r1
+2000020a:	da25      	bge.n	20000258 <_hook_cycle+0x194>
 		float phase = instances[i].phase;
-2000023a:	ed53 7a02 	vldr	s15, [r3, #-8]
+2000020c:	ed53 7a02 	vldr	s15, [r3, #-8]
 	res |= mod;
 	return res;
 }
 
 __fast_inline float generate(int8_t waveform, float phase) {
 	if (waveform == 0) {
-2000023e:	2800      	cmp	r0, #0
-20000240:	d161      	bne.n	20000306 <_hook_cycle+0x242>
+20000210:	2f00      	cmp	r7, #0
+20000212:	d15f      	bne.n	200002d4 <_hook_cycle+0x210>
 		return (2.0f - 2 * phase) - 1.0f;
-20000242:	ee35 7ae7 	vsub.f32	s14, s11, s15
-20000246:	eef0 6a46 	vmov.f32	s13, s12
-2000024a:	eee7 6a05 	vfma.f32	s13, s14, s10
-2000024e:	eeb0 7a66 	vmov.f32	s14, s13
+20000214:	ee39 7ae7 	vsub.f32	s14, s19, s15
+20000218:	eeb0 6a66 	vmov.f32	s12, s13
+2000021c:	eea7 6a24 	vfma.f32	s12, s14, s9
+20000220:	eeb0 7a46 	vmov.f32	s14, s12
   // write to buffer
   for (; y != y_e; ) {
 	float totalSig = 0.0f;
 	for (i = 0; i < voices && i < maxVoice; i++) {
 		float phase = instances[i].phase;
-		totalSig += generate(s_state.waveform, phase) * instances[i].level * (1 / voices);
-20000252:	edd3 6a00 	vldr	s13, [r3]
-20000256:	fb97 fef5 	sdiv	lr, r7, r5
-2000025a:	ee27 7a26 	vmul.f32	s14, s14, s13
-2000025e:	ee06 ea90 	vmov	s13, lr
-20000262:	eef8 6ae6 	vcvt.f32.s32	s13, s13
+		totalSig += generate(s_state.waveform, phase) * instances[i].level * (1.0f / (float)voices);
+20000224:	ed93 6a00 	vldr	s12, [r3]
+20000228:	eef8 5a49 	vcvt.f32.u32	s11, s18
+2000022c:	ee27 7a06 	vmul.f32	s14, s14, s12
+20000230:	ee89 6aa5 	vdiv.f32	s12, s19, s11
   }
   
   // write to buffer
   for (; y != y_e; ) {
 	float totalSig = 0.0f;
 	for (i = 0; i < voices && i < maxVoice; i++) {
-20000266:	3201      	adds	r2, #1
+20000234:	3201      	adds	r2, #1
+20000236:	330c      	adds	r3, #12
 		float phase = instances[i].phase;
-		totalSig += generate(s_state.waveform, phase) * instances[i].level * (1 / voices);
-20000268:	eea7 ba26 	vfma.f32	s22, s14, s13
-2000026c:	330c      	adds	r3, #12
+		totalSig += generate(s_state.waveform, phase) * instances[i].level * (1.0f / (float)voices);
+20000238:	eea7 ba06 	vfma.f32	s22, s14, s12
 		phase += instances[i].w0;
-2000026e:	ed13 7a04 	vldr	s14, [r3, #-16]
-20000272:	ee77 7a87 	vadd.f32	s15, s15, s14
+2000023c:	ed13 7a04 	vldr	s14, [r3, #-16]
+20000240:	ee77 7a87 	vadd.f32	s15, s15, s14
 		phase -= (uint32_t) phase;
-20000276:	eebc 7ae7 	vcvt.u32.f32	s14, s15
-2000027a:	eeb8 7a47 	vcvt.f32.u32	s14, s14
+20000244:	eebc 7ae7 	vcvt.u32.f32	s14, s15
+20000248:	eeb8 7a47 	vcvt.f32.u32	s14, s14
 		instances[i].phase = phase;
-2000027e:	ee77 7ac7 	vsub.f32	s15, s15, s14
-20000282:	ed43 7a05 	vstr	s15, [r3, #-20]	; 0xffffffec
+2000024c:	ee77 7ac7 	vsub.f32	s15, s15, s14
+20000250:	ed43 7a05 	vstr	s15, [r3, #-20]	; 0xffffffec
   }
   
   // write to buffer
   for (; y != y_e; ) {
 	float totalSig = 0.0f;
 	for (i = 0; i < voices && i < maxVoice; i++) {
-20000286:	42aa      	cmp	r2, r5
-20000288:	d1d5      	bne.n	20000236 <_hook_cycle+0x172>
+20000254:	4282      	cmp	r2, r0
+20000256:	d1d7      	bne.n	20000208 <_hook_cycle+0x144>
+20000258:	9000      	str	r0, [sp, #0]
 		phase += instances[i].w0;
 		phase -= (uint32_t) phase;
 		instances[i].phase = phase;
 	}
 
-	totalSig = totalSig * (1.0f - s_state.noiseLevel);
-2000028a:	edd4 aa06 	vldr	s21, [r4, #24]
-2000028e:	f000 f891 	bl	200003b4 <___osc_white_veneer>
-	totalSig += osc_white() * s_state.noiseLevel;
+	totalSig = totalSig * (1.f - s_state.noiseLevel) + osc_white() * s_state.noiseLevel;
+2000025a:	edd4 aa06 	vldr	s21, [r4, #24]
+2000025e:	f000 f8cf 	bl	20000400 <___osc_white_veneer>
 	const float sig  = osc_softclipf(0.05f, drive * totalSig);
-20000292:	edd4 7a06 	vldr	s15, [r4, #24]
+20000262:	edd4 7a06 	vldr	s15, [r4, #24]
+20000266:	9800      	ldr	r0, [sp, #0]
+20000268:	ee20 0a27 	vmul.f32	s0, s0, s15
 		phase += instances[i].w0;
 		phase -= (uint32_t) phase;
 		instances[i].phase = phase;
 	}
 
-	totalSig = totalSig * (1.0f - s_state.noiseLevel);
-20000296:	eef7 9a00 	vmov.f32	s19, #112	; 0x3f800000  1.0
-	totalSig += osc_white() * s_state.noiseLevel;
+	totalSig = totalSig * (1.f - s_state.noiseLevel) + osc_white() * s_state.noiseLevel;
+2000026c:	ee7b aaea 	vsub.f32	s21, s23, s21
 	const float sig  = osc_softclipf(0.05f, drive * totalSig);
-2000029a:	ee20 0a27 	vmul.f32	s0, s0, s15
-		phase += instances[i].w0;
-		phase -= (uint32_t) phase;
-		instances[i].phase = phase;
-	}
-
-	totalSig = totalSig * (1.0f - s_state.noiseLevel);
-2000029e:	ee79 aaea 	vsub.f32	s21, s19, s21
-	totalSig += osc_white() * s_state.noiseLevel;
-	const float sig  = osc_softclipf(0.05f, drive * totalSig);
-200002a2:	eeab 0a2a 	vfma.f32	s0, s22, s21
-200002a6:	ee60 7a09 	vmul.f32	s15, s0, s18
-200002aa:	eebf 0a00 	vmov.f32	s0, #240	; 0xbf800000 -1.0
-200002ae:	eef4 7ac0 	vcmpe.f32	s15, s0
-200002b2:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
-200002b6:	db08      	blt.n	200002ca <_hook_cycle+0x206>
-200002b8:	eef4 7ae9 	vcmpe.f32	s15, s19
-200002bc:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
-200002c0:	bfb4      	ite	lt
-200002c2:	eeb0 0a67 	vmovlt.f32	s0, s15
-200002c6:	eeb0 0a69 	vmovge.f32	s0, s19
+20000270:	eeab 0a2a 	vfma.f32	s0, s22, s21
+20000274:	ee60 7a28 	vmul.f32	s15, s0, s17
+20000278:	eebf 0a00 	vmov.f32	s0, #240	; 0xbf800000 -1.0
+2000027c:	eef4 7ac0 	vcmpe.f32	s15, s0
+20000280:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
+20000284:	db08      	blt.n	20000298 <_hook_cycle+0x1d4>
+20000286:	eef4 7ae9 	vcmpe.f32	s15, s19
+2000028a:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
+2000028e:	bfb4      	ite	lt
+20000290:	eeb0 0a67 	vmovlt.f32	s0, s15
+20000294:	eeb0 0a69 	vmovge.f32	s0, s19
 	*(y++) = f32_to_q31(sig);
-200002ca:	ee60 7a00 	vmul.f32	s15, s0, s0
-200002ce:	ed9f 7a1e 	vldr	s14, [pc, #120]	; 20000348 <_hook_cycle+0x284>
-200002d2:	ee60 7a67 	vnmul.f32	s15, s0, s15
+20000298:	ee60 7a00 	vmul.f32	s15, s0, s0
+2000029c:	ed9f 7a1d 	vldr	s14, [pc, #116]	; 20000314 <_hook_cycle+0x250>
+200002a0:	ee60 7a67 	vnmul.f32	s15, s0, s15
     lfoz += lfo_inc;
-200002d6:	ee3a aa28 	vadd.f32	s20, s20, s17
+200002a4:	ee3a aa08 	vadd.f32	s20, s20, s16
+		instances[i].phase = phase;
 	}
 
-	totalSig = totalSig * (1.0f - s_state.noiseLevel);
-	totalSig += osc_white() * s_state.noiseLevel;
+	totalSig = totalSig * (1.f - s_state.noiseLevel) + osc_white() * s_state.noiseLevel;
 	const float sig  = osc_softclipf(0.05f, drive * totalSig);
 	*(y++) = f32_to_q31(sig);
-200002da:	eea7 0a87 	vfma.f32	s0, s15, s14
-200002de:	eebe 0ae0 	vcvt.s32.f32	s0, s0, #31
-200002e2:	eca8 0a01 	vstmia	r8!, {s0}
+200002a8:	eea7 0a87 	vfma.f32	s0, s15, s14
+200002ac:	eebe 0ae0 	vcvt.s32.f32	s0, s0, #31
+200002b0:	eca6 0a01 	vstmia	r6!, {s0}
 			instances[i].phase = s_state.phaseSync ? 0.f : osc_white();
 		}
   }
   
   // write to buffer
   for (; y != y_e; ) {
-200002e6:	45c8      	cmp	r8, r9
-200002e8:	d017      	beq.n	2000031a <_hook_cycle+0x256>
+200002b4:	4546      	cmp	r6, r8
+200002b6:	d017      	beq.n	200002e8 <_hook_cycle+0x224>
 	float totalSig = 0.0f;
 	for (i = 0; i < voices && i < maxVoice; i++) {
-200002ea:	6831      	ldr	r1, [r6, #0]
+200002b8:	6829      	ldr	r1, [r5, #0]
 		float phase = instances[i].phase;
-		totalSig += generate(s_state.waveform, phase) * instances[i].level * (1 / voices);
-200002ec:	f994 001c 	ldrsb.w	r0, [r4, #28]
-200002f0:	4b16      	ldr	r3, [pc, #88]	; (2000034c <_hook_cycle+0x288>)
-200002f2:	ed9f ba14 	vldr	s22, [pc, #80]	; 20000344 <_hook_cycle+0x280>
-200002f6:	2200      	movs	r2, #0
+		totalSig += generate(s_state.waveform, phase) * instances[i].level * (1.0f / (float)voices);
+200002ba:	f994 701c 	ldrsb.w	r7, [r4, #28]
+200002be:	4b16      	ldr	r3, [pc, #88]	; (20000318 <_hook_cycle+0x254>)
+200002c0:	ed9f ba13 	vldr	s22, [pc, #76]	; 20000310 <_hook_cycle+0x24c>
+200002c4:	2200      	movs	r2, #0
 
 __fast_inline float generate(int8_t waveform, float phase) {
 	if (waveform == 0) {
 		return (2.0f - 2 * phase) - 1.0f;
 	}
 	return phase > 0.5f ? -1.0f : 1.0f;
-200002f8:	eebf 6a00 	vmov.f32	s12, #240	; 0xbf800000 -1.0
-200002fc:	eef7 5a00 	vmov.f32	s11, #112	; 0x3f800000  1.0
+200002c6:	eeb6 5a00 	vmov.f32	s10, #96	; 0x3f000000  0.5
+200002ca:	eeff 6a00 	vmov.f32	s13, #240	; 0xbf800000 -1.0
 	return res;
 }
 
 __fast_inline float generate(int8_t waveform, float phase) {
 	if (waveform == 0) {
 		return (2.0f - 2 * phase) - 1.0f;
-20000300:	eeb0 5a00 	vmov.f32	s10, #0	; 0x40000000  2.0
-20000304:	e7bf      	b.n	20000286 <_hook_cycle+0x1c2>
+200002ce:	eef0 4a00 	vmov.f32	s9, #0	; 0x40000000  2.0
+200002d2:	e7bf      	b.n	20000254 <_hook_cycle+0x190>
 	}
 	return phase > 0.5f ? -1.0f : 1.0f;
-20000306:	eef4 7ac8 	vcmpe.f32	s15, s16
-2000030a:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
-2000030e:	bfd4      	ite	le
-20000310:	eeb0 7a65 	vmovle.f32	s14, s11
-20000314:	eeb0 7a46 	vmovgt.f32	s14, s12
-20000318:	e79b      	b.n	20000252 <_hook_cycle+0x18e>
+200002d4:	eef4 7ac5 	vcmpe.f32	s15, s10
+200002d8:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
+200002dc:	bfd4      	ite	le
+200002de:	eeb0 7a69 	vmovle.f32	s14, s19
+200002e2:	eeb0 7a66 	vmovgt.f32	s14, s13
+200002e6:	e79d      	b.n	20000224 <_hook_cycle+0x160>
 	const float sig  = osc_softclipf(0.05f, drive * totalSig);
 	*(y++) = f32_to_q31(sig);
     lfoz += lfo_inc;
   }
   
   s_state.lfoz = lfoz;
-2000031a:	ed84 aa02 	vstr	s20, [r4, #8]
+200002e8:	ed84 aa02 	vstr	s20, [r4, #8]
 }
-2000031e:	b005      	add	sp, #20
-20000320:	ecbd 8b08 	vpop	{d8-d11}
-20000324:	e8bd 8ff0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, pc}
-20000328:	200003c8 	.word	0x200003c8
-2000032c:	200003f0 	.word	0x200003f0
-20000330:	200003c0 	.word	0x200003c0
-20000334:	0800f100 	.word	0x0800f100
-20000338:	3b808081 	.word	0x3b808081
-2000033c:	46b8ff49 	.word	0x46b8ff49
-20000340:	37aec33e 	.word	0x37aec33e
-20000344:	00000000 	.word	0x00000000
-20000348:	3d4ccccd 	.word	0x3d4ccccd
-2000034c:	200003f4 	.word	0x200003f4
+200002ec:	b005      	add	sp, #20
+200002ee:	ecbd 8b08 	vpop	{d8-d11}
+200002f2:	e8bd 8ff0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, pc}
+200002f6:	bf00      	nop
+200002f8:	20000410 	.word	0x20000410
+200002fc:	20000438 	.word	0x20000438
+20000300:	20000408 	.word	0x20000408
+20000304:	3b808081 	.word	0x3b808081
+20000308:	46b8ff49 	.word	0x46b8ff49
+2000030c:	37aec33e 	.word	0x37aec33e
+20000310:	00000000 	.word	0x00000000
+20000314:	3d4ccccd 	.word	0x3d4ccccd
+20000318:	2000043c 	.word	0x2000043c
+2000031c:	0800f100 	.word	0x0800f100
 
-20000350 <_hook_on>:
+20000320 <_hook_on>:
 
 void OSC_NOTEON(const user_osc_param_t * const params)
 {
   s_state.flags |= k_flag_reset;
-20000350:	4a02      	ldr	r2, [pc, #8]	; (2000035c <_hook_on+0xc>)
-20000352:	7b13      	ldrb	r3, [r2, #12]
-20000354:	f043 0301 	orr.w	r3, r3, #1
-20000358:	7313      	strb	r3, [r2, #12]
-2000035a:	4770      	bx	lr
-2000035c:	200003c8 	.word	0x200003c8
+20000320:	4a02      	ldr	r2, [pc, #8]	; (2000032c <_hook_on+0xc>)
+20000322:	7b13      	ldrb	r3, [r2, #12]
+20000324:	f043 0301 	orr.w	r3, r3, #1
+20000328:	7313      	strb	r3, [r2, #12]
+2000032a:	4770      	bx	lr
+2000032c:	20000410 	.word	0x20000410
 
-20000360 <_hook_off>:
+20000330 <_hook_off>:
 }
 
 void OSC_NOTEOFF(const user_osc_param_t * const params)
 {
-20000360:	4770      	bx	lr
+20000330:	4770      	bx	lr
 
-20000362 <_hook_param>:
+20000332 <_Z17updateVoiceLevelsv>:
   (void)params;
+}
+
+void updateVoiceLevels() {
+	int i;
+	float voice_count = s_state.voices;
+20000332:	4b19      	ldr	r3, [pc, #100]	; (20000398 <_Z17updateVoiceLevelsv+0x66>)
+	float mid = voice_count / 2.f;
+	for (i = 0; i < voice_count && i < maxVoice; i++) {
+20000334:	4a19      	ldr	r2, [pc, #100]	; (2000039c <_Z17updateVoiceLevelsv+0x6a>)
+  (void)params;
+}
+
+void updateVoiceLevels() {
+	int i;
+	float voice_count = s_state.voices;
+20000336:	edd3 7a04 	vldr	s15, [r3, #16]
+	float mid = voice_count / 2.f;
+	for (i = 0; i < voice_count && i < maxVoice; i++) {
+2000033a:	6811      	ldr	r1, [r2, #0]
+		instances[i].level = (i > mid) ? (float) (mid - i) : (float) (i - mid);
+		instances[i].level = (instances[i].level + mid) / mid;
+		instances[i].level = instances[i].level * s_state.sideLevel + (1.f - s_state.sideLevel);
+2000033c:	ed93 6a08 	vldr	s12, [r3, #32]
+  (void)params;
+}
+
+void updateVoiceLevels() {
+	int i;
+	float voice_count = s_state.voices;
+20000340:	eef8 6ae7 	vcvt.f32.s32	s13, s15
+	float mid = voice_count / 2.f;
+20000344:	eeb6 7a00 	vmov.f32	s14, #96	; 0x3f000000  0.5
+20000348:	ee26 7a87 	vmul.f32	s14, s13, s14
+2000034c:	3324      	adds	r3, #36	; 0x24
+	for (i = 0; i < voice_count && i < maxVoice; i++) {
+2000034e:	2200      	movs	r2, #0
+		instances[i].level = (i > mid) ? (float) (mid - i) : (float) (i - mid);
+		instances[i].level = (instances[i].level + mid) / mid;
+		instances[i].level = instances[i].level * s_state.sideLevel + (1.f - s_state.sideLevel);
+20000350:	eeb7 5a00 	vmov.f32	s10, #112	; 0x3f800000  1.0
+
+void updateVoiceLevels() {
+	int i;
+	float voice_count = s_state.voices;
+	float mid = voice_count / 2.f;
+	for (i = 0; i < voice_count && i < maxVoice; i++) {
+20000354:	ee07 2a90 	vmov	s15, r2
+20000358:	eef8 7ae7 	vcvt.f32.s32	s15, s15
+2000035c:	eef4 6ae7 	vcmpe.f32	s13, s15
+20000360:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
+20000364:	dd17      	ble.n	20000396 <_Z17updateVoiceLevelsv+0x64>
+20000366:	428a      	cmp	r2, r1
+20000368:	da15      	bge.n	20000396 <_Z17updateVoiceLevelsv+0x64>
+		instances[i].level = (i > mid) ? (float) (mid - i) : (float) (i - mid);
+2000036a:	eeb4 7ae7 	vcmpe.f32	s14, s15
+2000036e:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
+20000372:	bf4c      	ite	mi
+20000374:	ee77 7a67 	vsubmi.f32	s15, s14, s15
+20000378:	ee77 7ac7 	vsubpl.f32	s15, s15, s14
+
+void updateVoiceLevels() {
+	int i;
+	float voice_count = s_state.voices;
+	float mid = voice_count / 2.f;
+	for (i = 0; i < voice_count && i < maxVoice; i++) {
+2000037c:	3201      	adds	r2, #1
+		instances[i].level = (i > mid) ? (float) (mid - i) : (float) (i - mid);
+		instances[i].level = (instances[i].level + mid) / mid;
+		instances[i].level = instances[i].level * s_state.sideLevel + (1.f - s_state.sideLevel);
+2000037e:	ee77 7a87 	vadd.f32	s15, s15, s14
+20000382:	330c      	adds	r3, #12
+20000384:	eec7 5a87 	vdiv.f32	s11, s15, s14
+20000388:	ee75 7a46 	vsub.f32	s15, s10, s12
+2000038c:	eee5 7a86 	vfma.f32	s15, s11, s12
+20000390:	ed43 7a01 	vstr	s15, [r3, #-4]
+
+void updateVoiceLevels() {
+	int i;
+	float voice_count = s_state.voices;
+	float mid = voice_count / 2.f;
+	for (i = 0; i < voice_count && i < maxVoice; i++) {
+20000394:	e7de      	b.n	20000354 <_Z17updateVoiceLevelsv+0x22>
+20000396:	4770      	bx	lr
+20000398:	20000410 	.word	0x20000410
+2000039c:	20000408 	.word	0x20000408
+
+200003a0 <_hook_param>:
+	}
 }
 
 void OSC_PARAM(uint16_t index, uint16_t value)
 {
   const float valf = param_val_to_f32(value);
-20000362:	ee07 1a90 	vmov	s15, r1
-20000366:	ed9f 7a11 	vldr	s14, [pc, #68]	; 200003ac <_hook_param+0x4a>
-2000036a:	eef8 7ae7 	vcvt.f32.s32	s15, s15
-2000036e:	ee67 7a87 	vmul.f32	s15, s15, s14
+200003a0:	ee07 1a90 	vmov	s15, r1
+200003a4:	eef8 7ae7 	vcvt.f32.s32	s15, s15
   
   switch (index) {
-20000372:	2805      	cmp	r0, #5
-20000374:	d819      	bhi.n	200003aa <_hook_param+0x48>
-20000376:	e8df f000 	tbb	[pc, r0]
-2000037a:	0703      	.short	0x0703
-2000037c:	15120f0b 	.word	0x15120f0b
+200003a8:	2805      	cmp	r0, #5
+200003aa:	d824      	bhi.n	200003f6 <_hook_param+0x56>
+200003ac:	e8df f000 	tbb	[pc, r0]
+200003b0:	140c0803 	.word	0x140c0803
+200003b4:	1a17      	.short	0x1a17
   case k_user_osc_param_id1:
 	 s_state.voices = value + 1;
-20000380:	4b0b      	ldr	r3, [pc, #44]	; (200003b0 <_hook_param+0x4e>)
-20000382:	3101      	adds	r1, #1
-20000384:	6119      	str	r1, [r3, #16]
+200003b6:	4b10      	ldr	r3, [pc, #64]	; (200003f8 <_hook_param+0x58>)
+200003b8:	3101      	adds	r1, #1
+200003ba:	6119      	str	r1, [r3, #16]
+	 updateVoiceLevels();
+200003bc:	f7ff bfb9 	b.w	20000332 <_Z17updateVoiceLevelsv>
 	 break;
-20000386:	4770      	bx	lr
   case k_user_osc_param_id2:
 	 s_state.detune = value + 1;
-20000388:	4b09      	ldr	r3, [pc, #36]	; (200003b0 <_hook_param+0x4e>)
-2000038a:	3101      	adds	r1, #1
-2000038c:	6159      	str	r1, [r3, #20]
+200003c0:	4b0d      	ldr	r3, [pc, #52]	; (200003f8 <_hook_param+0x58>)
+200003c2:	3101      	adds	r1, #1
+200003c4:	6159      	str	r1, [r3, #20]
 	 break;
-2000038e:	4770      	bx	lr
+200003c6:	4770      	bx	lr
   case k_user_osc_param_id3:
-	 s_state.noiseLevel = valf;
-20000390:	4b07      	ldr	r3, [pc, #28]	; (200003b0 <_hook_param+0x4e>)
-20000392:	edc3 7a06 	vstr	s15, [r3, #24]
+	 s_state.noiseLevel = value / 100.f;
+200003c8:	eddf 6a0c 	vldr	s13, [pc, #48]	; 200003fc <_hook_param+0x5c>
+200003cc:	4b0a      	ldr	r3, [pc, #40]	; (200003f8 <_hook_param+0x58>)
+200003ce:	ee87 7aa6 	vdiv.f32	s14, s15, s13
+200003d2:	ed83 7a06 	vstr	s14, [r3, #24]
 	 break;
-20000396:	4770      	bx	lr
+200003d6:	4770      	bx	lr
   case k_user_osc_param_id4:
 	 s_state.waveform = value;
-20000398:	4b05      	ldr	r3, [pc, #20]	; (200003b0 <_hook_param+0x4e>)
-2000039a:	7719      	strb	r1, [r3, #28]
+200003d8:	4b07      	ldr	r3, [pc, #28]	; (200003f8 <_hook_param+0x58>)
+200003da:	7719      	strb	r1, [r3, #28]
 	 break;
-2000039c:	4770      	bx	lr
+200003dc:	4770      	bx	lr
   case k_user_osc_param_id5:
 	 s_state.phaseSync = value;
-2000039e:	4b04      	ldr	r3, [pc, #16]	; (200003b0 <_hook_param+0x4e>)
-200003a0:	7759      	strb	r1, [r3, #29]
+200003de:	4b06      	ldr	r3, [pc, #24]	; (200003f8 <_hook_param+0x58>)
+200003e0:	7759      	strb	r1, [r3, #29]
 	 break;
-200003a2:	4770      	bx	lr
+200003e2:	4770      	bx	lr
   case k_user_osc_param_id6:
-	 s_state.sideLevel = valf;
-200003a4:	4b02      	ldr	r3, [pc, #8]	; (200003b0 <_hook_param+0x4e>)
-200003a6:	edc3 7a08 	vstr	s15, [r3, #32]
-200003aa:	4770      	bx	lr
-200003ac:	3a802008 	.word	0x3a802008
-200003b0:	200003c8 	.word	0x200003c8
+	 s_state.sideLevel = value / 100.f;
+200003e4:	eddf 6a05 	vldr	s13, [pc, #20]	; 200003fc <_hook_param+0x5c>
+200003e8:	4b03      	ldr	r3, [pc, #12]	; (200003f8 <_hook_param+0x58>)
+200003ea:	ee87 7aa6 	vdiv.f32	s14, s15, s13
+200003ee:	ed83 7a08 	vstr	s14, [r3, #32]
+	 updateVoiceLevels();
+200003f2:	f7ff bf9e 	b.w	20000332 <_Z17updateVoiceLevelsv>
+200003f6:	4770      	bx	lr
+200003f8:	20000410 	.word	0x20000410
+200003fc:	42c80000 	.word	0x42c80000
 
-200003b4 <___osc_white_veneer>:
-200003b4:	f85f f000 	ldr.w	pc, [pc]	; 200003b8 <___osc_white_veneer+0x4>
-200003b8:	0801edb9 	.word	0x0801edb9
+20000400 <___osc_white_veneer>:
+20000400:	f85f f000 	ldr.w	pc, [pc]	; 20000404 <___osc_white_veneer+0x4>
+20000404:	0801edb9 	.word	0x0801edb9

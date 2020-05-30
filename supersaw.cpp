@@ -130,13 +130,9 @@ void OSC_CYCLE(const user_osc_param_t * const params,
 
   // reset instances phase increment and phase
   int i;
-  float mid = voices / 2.f;
   for (i = 0; i < voices && i < maxVoice; i++) {
 		int32_t fineAdj = (i - voices >> 1) * detune;
 		uint16_t voicePitch = adjustPitch(params->pitch, fineAdj);
-		instances[i].level = (i > mid) ? mid - i : i - mid;
-		instances[i].level = (instances[i].level + mid) / mid;
-		instances[i].level = instances[i].level * s_state.sideLevel + (1.f - s_state.sideLevel);
 		instances[i].w0 = osc_w0f_for_note(voicePitch >> 8, voicePitch & 0xFF);
 		if (flags & k_flag_reset) {
 			instances[i].phase = s_state.phaseSync ? 0.f : osc_white();
@@ -148,14 +144,13 @@ void OSC_CYCLE(const user_osc_param_t * const params,
 	float totalSig = 0.0f;
 	for (i = 0; i < voices && i < maxVoice; i++) {
 		float phase = instances[i].phase;
-		totalSig += generate(s_state.waveform, phase) * instances[i].level * (1 / voices);
+		totalSig += generate(s_state.waveform, phase) * instances[i].level * (1.0f / (float)voices);
 		phase += instances[i].w0;
 		phase -= (uint32_t) phase;
 		instances[i].phase = phase;
 	}
 
-	totalSig = totalSig * (1.0f - s_state.noiseLevel);
-	totalSig += osc_white() * s_state.noiseLevel;
+	totalSig = totalSig * (1.f - s_state.noiseLevel) + osc_white() * s_state.noiseLevel;
 	const float sig  = osc_softclipf(0.05f, drive * totalSig);
 	*(y++) = f32_to_q31(sig);
     lfoz += lfo_inc;
@@ -174,6 +169,17 @@ void OSC_NOTEOFF(const user_osc_param_t * const params)
   (void)params;
 }
 
+void updateVoiceLevels() {
+	int i;
+	float voice_count = s_state.voices;
+	float mid = voice_count / 2.f;
+	for (i = 0; i < voice_count && i < maxVoice; i++) {
+		instances[i].level = (i > mid) ? (float) (mid - i) : (float) (i - mid);
+		instances[i].level = (instances[i].level + mid) / mid;
+		instances[i].level = instances[i].level * s_state.sideLevel + (1.f - s_state.sideLevel);
+	}
+}
+
 void OSC_PARAM(uint16_t index, uint16_t value)
 {
   const float valf = param_val_to_f32(value);
@@ -181,12 +187,13 @@ void OSC_PARAM(uint16_t index, uint16_t value)
   switch (index) {
   case k_user_osc_param_id1:
 	 s_state.voices = value + 1;
+	 updateVoiceLevels();
 	 break;
   case k_user_osc_param_id2:
 	 s_state.detune = value + 1;
 	 break;
   case k_user_osc_param_id3:
-	 s_state.noiseLevel = valf;
+	 s_state.noiseLevel = value / 100.f;
 	 break;
   case k_user_osc_param_id4:
 	 s_state.waveform = value;
@@ -195,7 +202,8 @@ void OSC_PARAM(uint16_t index, uint16_t value)
 	 s_state.phaseSync = value;
 	 break;
   case k_user_osc_param_id6:
-	 s_state.sideLevel = valf;
+	 s_state.sideLevel = value / 100.f;
+	 updateVoiceLevels();
 	 break;
   default:
     break;
