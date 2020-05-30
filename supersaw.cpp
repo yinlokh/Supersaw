@@ -125,6 +125,7 @@ void OSC_CYCLE(const user_osc_param_t * const params,
 
   uint8_t voices = s_state.voices;
   uint8_t detune = s_state.detune;
+  float voiceMix = voices > 1 ? voices / 4 : 1.0f;
 
   // reset instances phase increment and phase
   int i;
@@ -145,7 +146,8 @@ void OSC_CYCLE(const user_osc_param_t * const params,
 		phase -= (uint32_t) phase;
 		instances[i].phase = phase;
 	}
-	totalSig /= voices;
+
+	totalSig /= voiceMix;
 	totalSig += osc_white() * s_state.noiseLevel;
 	const float sig  = osc_softclipf(0.05f, drive * totalSig);
 	*(y++) = f32_to_q31(sig);
