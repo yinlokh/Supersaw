@@ -103,7 +103,7 @@ __fast_inline uint16_t adjustPitch(uint8_t pitch, uint8_t mod, int32_t fineAdjus
 	return res;
 }
 
-__fast_inline float generate(float phase) {
+__fast_inline float oscillator(float phase) {
 	float saw = (2.0f - 2 * phase) - 1.0f;
 	float sqr = phase > 0.5f ? -1.0f : 1.0f;
 	return (1.0f - s_state.shape) * saw + (s_state.shape) * sqr;
@@ -141,9 +141,10 @@ void OSC_CYCLE(const user_osc_param_t * const params,
   uint8_t pitch = params->pitch >> 8; 
   uint8_t mod = params->pitch & 0xFF;
   int i;
+  int32_t fineAdj = -1 * (voices >> 1) * detune;
   for (i = 0; i < voices; i++) {
-		int32_t fineAdj = (i - voices >> 1) * detune;
 		uint16_t voicePitch = adjustPitch(pitch, mod, fineAdj);
+		fineAdj += detune;
 		instances[i].w0 = osc_w0f_for_note(voicePitch >> 8, voicePitch & 0xFF);
 		if (flags & k_flag_reset) {
 			instances[i].phase = s_state.phaseSync ? 0.f : osc_white();
@@ -155,12 +156,12 @@ void OSC_CYCLE(const user_osc_param_t * const params,
 	float totalSig = 0.0f;
 	for (i = 0; i < voices; i++) {
 		float phase = instances[i].phase;
-		totalSig += generate(phase) * s_state.voiceLevel;
+		totalSig += oscillator(phase);
 		phase += instances[i].w0;
 		phase -= (uint32_t) phase;
 		instances[i].phase = phase;
 	}
-
+	totalSig *= s_state.voiceLevel;
 	totalSig = totalSig * (1.f - s_state.noiseLevel) + osc_white() * s_state.noiseLevel;
 	totalSig = compress(totalSig);
 	const float sig  = osc_softclipf(0.05f, drive * totalSig);
