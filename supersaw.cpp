@@ -125,7 +125,7 @@ void OSC_CYCLE(const user_osc_param_t * const params,
 
   uint8_t voices = s_state.voices;
   uint8_t detune = s_state.detune;
-  float voiceMix = voices > 1 ? voices / 4 : 1.0f;
+  float voiceMix = voices > 1 ? voices / 3.0f : 1.0f;
 
   // reset instances phase increment and phase
   int i;
