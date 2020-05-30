@@ -49,7 +49,7 @@ typedef struct State {
   float noiseLevel;
   int8_t waveform;
   int8_t phaseSync;
-  float sideLevel;
+  float compress;
 } State;
 
 static State s_state;
@@ -57,7 +57,6 @@ static State s_state;
 struct instance {
 	float phase;
 	float w0;
-	float level;
 };
 
 int maxVoice = 12;
@@ -109,6 +108,16 @@ __fast_inline float generate(int8_t waveform, float phase) {
 	return phase > 0.5f ? -1.0f : 1.0f;
 }
 
+__fast_inline float compress(float threshold, float sig) {
+	float ratio = 0.2f;
+	if (sig > threshold) {
+		sig = threshold + (sig - threshold) * ratio;
+	} else if (sig < -threshold) {
+		sig = -threshold + (sig + threshold) * ratio;
+	}
+	return sig / (threshold + (1.0f - threshold) * ratio);
+}
+
 void OSC_CYCLE(const user_osc_param_t * const params,
                int32_t *yn,
                const uint32_t frames)
@@ -144,13 +153,14 @@ void OSC_CYCLE(const user_osc_param_t * const params,
 	float totalSig = 0.0f;
 	for (i = 0; i < voices && i < maxVoice; i++) {
 		float phase = instances[i].phase;
-		totalSig += generate(s_state.waveform, phase) * instances[i].level * (1.0f / (float)voices);
+		totalSig += generate(s_state.waveform, phase) * (1.0f / (float)voices);
 		phase += instances[i].w0;
 		phase -= (uint32_t) phase;
 		instances[i].phase = phase;
 	}
 
 	totalSig = totalSig * (1.f - s_state.noiseLevel) + osc_white() * s_state.noiseLevel;
+	totalSig = compress(s_state.compress, totalSig);
 	const float sig  = osc_softclipf(0.05f, drive * totalSig);
 	*(y++) = f32_to_q31(sig);
     lfoz += lfo_inc;
@@ -169,17 +179,6 @@ void OSC_NOTEOFF(const user_osc_param_t * const params)
   (void)params;
 }
 
-void updateVoiceLevels() {
-	int i;
-	float voice_count = s_state.voices;
-	float mid = voice_count / 2.f;
-	for (i = 0; i < voice_count && i < maxVoice; i++) {
-		instances[i].level = (i > mid) ? (float) (mid - i) : (float) (i - mid);
-		instances[i].level = (instances[i].level + mid) / mid;
-		instances[i].level = instances[i].level * s_state.sideLevel + (1.f - s_state.sideLevel);
-	}
-}
-
 void OSC_PARAM(uint16_t index, uint16_t value)
 {
   const float valf = param_val_to_f32(value);
@@ -187,7 +186,6 @@ void OSC_PARAM(uint16_t index, uint16_t value)
   switch (index) {
   case k_user_osc_param_id1:
 	 s_state.voices = value + 1;
-	 updateVoiceLevels();
 	 break;
   case k_user_osc_param_id2:
 	 s_state.detune = value + 1;
@@ -202,8 +200,7 @@ void OSC_PARAM(uint16_t index, uint16_t value)
 	 s_state.phaseSync = value;
 	 break;
   case k_user_osc_param_id6:
-	 s_state.sideLevel = value / 100.f;
-	 updateVoiceLevels();
+	 s_state.compress = value / 100.f;
 	 break;
   default:
     break;

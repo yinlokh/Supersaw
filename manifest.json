@@ -15,7 +15,7 @@
             ["Noise Lvl",     0, 100, "%"],
             ["Waveform",    0, 1, ""],
 			["Phase Sync",    0, 1, ""],
-			["Side Lvl",     0, 100, "%"]            
+			["Comp Thr",     0, 100, "%"]            
           ]
     }
 }
