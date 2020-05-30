@@ -45,11 +45,14 @@ typedef struct State {
   float lfo, lfoz;
   uint8_t flags;
   int32_t voices;
+  float voiceLevel;
   int32_t detune;
   float noiseLevel;
-  int8_t waveform;
+  float shape;
   int8_t phaseSync;
-  float compress;
+  float compThreshold;
+  float compGain;
+  float compRatio;
 } State;
 
 static State s_state;
@@ -75,14 +78,13 @@ void OSC_INIT(uint32_t platform, uint32_t api)
   s_state.voices = 2;
   s_state.detune = 10;
   s_state.noiseLevel = 0.f;
-  s_state.waveform = 0;
+  s_state.shape = 0;
+  s_state.compRatio = 0.2f;
 }
 
-__fast_inline uint16_t adjustPitch(uint16_t note, int32_t fineAdjust) {
+__fast_inline uint16_t adjustPitch(uint8_t pitch, uint8_t mod, int32_t fineAdjust) {
 	// high byte = note number, low byte = fine
 	// mod 0 - 255 only adds to original pitch, negative mod applied as note - 1 + (255 + mod)
-	uint8_t pitch = note >> 8; 
-	uint8_t mod = note & 0xFF;
 	uint16_t res = 0;
 
 	// apply fine adjustment
@@ -101,21 +103,19 @@ __fast_inline uint16_t adjustPitch(uint16_t note, int32_t fineAdjust) {
 	return res;
 }
 
-__fast_inline float generate(int8_t waveform, float phase) {
-	if (waveform == 0) {
-		return (2.0f - 2 * phase) - 1.0f;
-	}
-	return phase > 0.5f ? -1.0f : 1.0f;
+__fast_inline float generate(float phase) {
+	float saw = (2.0f - 2 * phase) - 1.0f;
+	float sqr = phase > 0.5f ? -1.0f : 1.0f;
+	return (1.0f - s_state.shape) * saw + (s_state.shape) * sqr;
 }
 
-__fast_inline float compress(float threshold, float sig) {
-	float ratio = 0.2f;
-	if (sig > threshold) {
-		sig = threshold + (sig - threshold) * ratio;
-	} else if (sig < -threshold) {
-		sig = -threshold + (sig + threshold) * ratio;
+__fast_inline float compress(float sig) {
+	if (sig > s_state.compThreshold) {
+		sig = s_state.compThreshold + (sig - s_state.compThreshold) * s_state.compRatio;
+	} else if (sig < -s_state.compThreshold) {
+		sig = -s_state.compThreshold + (sig + s_state.compThreshold) * s_state.compRatio;
 	}
-	return sig / (threshold + (1.0f - threshold) * ratio);
+	return sig * s_state.compGain;
 }
 
 void OSC_CYCLE(const user_osc_param_t * const params,
@@ -138,10 +138,12 @@ void OSC_CYCLE(const user_osc_param_t * const params,
   uint8_t detune = s_state.detune;
 
   // reset instances phase increment and phase
+  uint8_t pitch = params->pitch >> 8; 
+  uint8_t mod = params->pitch & 0xFF;
   int i;
-  for (i = 0; i < voices && i < maxVoice; i++) {
+  for (i = 0; i < voices; i++) {
 		int32_t fineAdj = (i - voices >> 1) * detune;
-		uint16_t voicePitch = adjustPitch(params->pitch, fineAdj);
+		uint16_t voicePitch = adjustPitch(pitch, mod, fineAdj);
 		instances[i].w0 = osc_w0f_for_note(voicePitch >> 8, voicePitch & 0xFF);
 		if (flags & k_flag_reset) {
 			instances[i].phase = s_state.phaseSync ? 0.f : osc_white();
@@ -151,16 +153,16 @@ void OSC_CYCLE(const user_osc_param_t * const params,
   // write to buffer
   for (; y != y_e; ) {
 	float totalSig = 0.0f;
-	for (i = 0; i < voices && i < maxVoice; i++) {
+	for (i = 0; i < voices; i++) {
 		float phase = instances[i].phase;
-		totalSig += generate(s_state.waveform, phase) * (1.0f / (float)voices);
+		totalSig += generate(phase) * s_state.voiceLevel;
 		phase += instances[i].w0;
 		phase -= (uint32_t) phase;
 		instances[i].phase = phase;
 	}
 
 	totalSig = totalSig * (1.f - s_state.noiseLevel) + osc_white() * s_state.noiseLevel;
-	totalSig = compress(s_state.compress, totalSig);
+	totalSig = compress(totalSig);
 	const float sig  = osc_softclipf(0.05f, drive * totalSig);
 	*(y++) = f32_to_q31(sig);
     lfoz += lfo_inc;
@@ -186,6 +188,7 @@ void OSC_PARAM(uint16_t index, uint16_t value)
   switch (index) {
   case k_user_osc_param_id1:
 	 s_state.voices = value + 1;
+	 s_state.voiceLevel = 1.f / s_state.voices;
 	 break;
   case k_user_osc_param_id2:
 	 s_state.detune = value + 1;
@@ -194,14 +197,15 @@ void OSC_PARAM(uint16_t index, uint16_t value)
 	 s_state.noiseLevel = value / 100.f;
 	 break;
   case k_user_osc_param_id4:
-	 s_state.waveform = value;
-	 break;
-  case k_user_osc_param_id5:
 	 s_state.phaseSync = value;
 	 break;
-  case k_user_osc_param_id6:
-	 s_state.compress = value / 100.f;
+  case k_user_osc_param_id5:
+	 s_state.compThreshold = value / 100.f;
+	 s_state.compGain = 1 / (s_state.compThreshold + (1.0f - s_state.compThreshold) * s_state.compRatio);
 	 break;
+  case k_user_osc_param_shape:
+     s_state.shape = valf;
+    break;
   default:
     break;
   }

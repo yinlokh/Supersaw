@@ -8,12 +8,11 @@
         "prg_id" : 0,
         "version" : "0.1-0",
         "name" : "Supersaw",
-        "num_param" : 6,
+        "num_param" : 5,
         "params" : [
-            ["Voices",    0, 12, ""],
+            ["Voices",    0, 11, ""],
             ["Detune",    0, 50, ""],
             ["Noise Lvl",     0, 100, "%"],
-            ["Waveform",    0, 1, ""],
 			["Phase Sync",    0, 1, ""],
 			["Comp Thr",     0, 100, "%"]            
           ]
