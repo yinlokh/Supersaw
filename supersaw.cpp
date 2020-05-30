@@ -49,6 +49,7 @@ typedef struct State {
   float noiseLevel;
   int8_t waveform;
   int8_t phaseSync;
+  float sideLevel;
 } State;
 
 static State s_state;
@@ -56,6 +57,7 @@ static State s_state;
 struct instance {
 	float phase;
 	float w0;
+	float level;
 };
 
 int maxVoice = 12;
@@ -125,15 +127,20 @@ void OSC_CYCLE(const user_osc_param_t * const params,
 
   uint8_t voices = s_state.voices;
   uint8_t detune = s_state.detune;
-  float voiceMix = voices > 1 ? voices / 3.0f : 1.0f;
 
   // reset instances phase increment and phase
   int i;
+  float mid = voices / 2.f;
   for (i = 0; i < voices && i < maxVoice; i++) {
 		int32_t fineAdj = (i - voices >> 1) * detune;
 		uint16_t voicePitch = adjustPitch(params->pitch, fineAdj);
+		instances[i].level = (i > mid) ? mid - i : i - mid;
+		instances[i].level = (instances[i].level + mid) / mid;
+		instances[i].level = instances[i].level * s_state.sideLevel + (1.f - s_state.sideLevel);
 		instances[i].w0 = osc_w0f_for_note(voicePitch >> 8, voicePitch & 0xFF);
-		instances[i].phase = (flags & k_flag_reset) && s_state.phaseSync ? 0.f : instances[i].phase;
+		if (flags & k_flag_reset) {
+			instances[i].phase = s_state.phaseSync ? 0.f : osc_white();
+		}
   }
   
   // write to buffer
@@ -141,13 +148,13 @@ void OSC_CYCLE(const user_osc_param_t * const params,
 	float totalSig = 0.0f;
 	for (i = 0; i < voices && i < maxVoice; i++) {
 		float phase = instances[i].phase;
-		totalSig += generate(s_state.waveform, phase);
+		totalSig += generate(s_state.waveform, phase) * instances[i].level * (1 / voices);
 		phase += instances[i].w0;
 		phase -= (uint32_t) phase;
 		instances[i].phase = phase;
 	}
 
-	totalSig /= voiceMix;
+	totalSig = totalSig * (1.0f - s_state.noiseLevel);
 	totalSig += osc_white() * s_state.noiseLevel;
 	const float sig  = osc_softclipf(0.05f, drive * totalSig);
 	*(y++) = f32_to_q31(sig);
@@ -186,6 +193,10 @@ void OSC_PARAM(uint16_t index, uint16_t value)
 	 break;
   case k_user_osc_param_id5:
 	 s_state.phaseSync = value;
+	 break;
+  case k_user_osc_param_id6:
+	 s_state.sideLevel = valf;
+	 break;
   default:
     break;
   }

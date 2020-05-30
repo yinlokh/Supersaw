@@ -26,7 +26,7 @@ LOAD ./build/obj/supersaw.o
                 0x20000040                . = ALIGN (0x4)
                 0x20000040                PROVIDE (__init_array_end, .)
 
-.text           0x20000040      0x334
+.text           0x20000040      0x37c
                 0x20000040                . = ALIGN (0x4)
                 0x20000040                _text_start = .
  *(.text)
@@ -34,94 +34,94 @@ LOAD ./build/obj/supersaw.o
                 0x20000042                _hook_mute
                 0x20000044                _hook_value
                 0x2000004e                _entry
- .text          0x200000a0      0x2cc ./build/obj/supersaw.o
+ .text          0x200000a0      0x314 ./build/obj/supersaw.o
                 0x200000a0                _hook_init
                 0x200000c4                _hook_cycle
-                0x20000310                _hook_on
-                0x20000320                _hook_off
-                0x20000322                _hook_param
- .text.__stub   0x2000036c        0x8 linker stubs
+                0x20000350                _hook_on
+                0x20000360                _hook_off
+                0x20000362                _hook_param
+ .text.__stub   0x200003b4        0x8 linker stubs
  *(.text.*)
  *(.glue_7)
- .glue_7        0x20000374        0x0 linker stubs
+ .glue_7        0x200003bc        0x0 linker stubs
  *(.glue_7t)
- .glue_7t       0x20000374        0x0 linker stubs
+ .glue_7t       0x200003bc        0x0 linker stubs
  *(.gcc*)
-                0x20000374                . = ALIGN (0x4)
-                0x20000374                _text_end = .
+                0x200003bc                . = ALIGN (0x4)
+                0x200003bc                _text_end = .
 
-.vfp11_veneer   0x20000374        0x0
- .vfp11_veneer  0x20000374        0x0 linker stubs
+.vfp11_veneer   0x200003bc        0x0
+ .vfp11_veneer  0x200003bc        0x0 linker stubs
 
-.v4_bx          0x20000374        0x0
- .v4_bx         0x20000374        0x0 linker stubs
+.v4_bx          0x200003bc        0x0
+ .v4_bx         0x200003bc        0x0 linker stubs
 
-.iplt           0x20000374        0x0
- .iplt          0x20000374        0x0 ./build/obj/_unit.o
+.iplt           0x200003bc        0x0
+ .iplt          0x200003bc        0x0 ./build/obj/_unit.o
 
-.rel.dyn        0x20000374        0x0
- .rel.iplt      0x20000374        0x0 ./build/obj/_unit.o
+.rel.dyn        0x200003bc        0x0
+ .rel.iplt      0x200003bc        0x0 ./build/obj/_unit.o
 
-.rodata         0x20000374        0x0
-                0x20000374                . = ALIGN (0x4)
-                0x20000374                _rodata_start = .
+.rodata         0x200003bc        0x0
+                0x200003bc                . = ALIGN (0x4)
+                0x200003bc                _rodata_start = .
  *(.rodata)
  *(.rodata.*)
-                0x20000374                . = ALIGN (0x4)
-                0x20000374                _rodata_end = .
+                0x200003bc                . = ALIGN (0x4)
+                0x200003bc                _rodata_end = .
 
-.data           0x20000378        0x8
-                0x20000378                . = ALIGN (0x8)
-                0x20000378                _data_start = .
+.data           0x200003c0        0x8
+                0x200003c0                . = ALIGN (0x8)
+                0x200003c0                _data_start = .
  *(.data)
- .data          0x20000378        0x0 ./build/obj/_unit.o
- .data          0x20000378        0x4 ./build/obj/supersaw.o
-                0x20000378                maxVoice
+ .data          0x200003c0        0x0 ./build/obj/_unit.o
+ .data          0x200003c0        0x4 ./build/obj/supersaw.o
+                0x200003c0                maxVoice
  *(.data.*)
-                0x20000380                . = ALIGN (0x8)
- *fill*         0x2000037c        0x4 
-                0x20000380                _data_end = .
+                0x200003c8                . = ALIGN (0x8)
+ *fill*         0x200003c4        0x4 
+                0x200003c8                _data_end = .
 
-.igot.plt       0x20000380        0x0
- .igot.plt      0x20000380        0x0 ./build/obj/_unit.o
+.igot.plt       0x200003c8        0x0
+ .igot.plt      0x200003c8        0x0 ./build/obj/_unit.o
 
-.bss            0x20000380       0x80
-                0x20000380                . = ALIGN (0x4)
-                0x20000380                _bss_start = .
+.bss            0x200003c8       0xb4
+                0x200003c8                . = ALIGN (0x4)
+                0x200003c8                _bss_start = .
  *(.bss)
- .bss           0x20000380        0x0 ./build/obj/_unit.o
- .bss           0x20000380       0x80 ./build/obj/supersaw.o
-                0x200003a0                instances
+ .bss           0x200003c8        0x0 ./build/obj/_unit.o
+ .bss           0x200003c8       0xb4 ./build/obj/supersaw.o
+                0x200003ec                instances
  *(.bss.*)
  *(COMMON)
-                0x20000400                . = ALIGN (0x4)
-                0x20000400                _bss_end = .
+                0x2000047c                . = ALIGN (0x4)
+                0x2000047c                _bss_end = .
 
-.ARM.extab      0x20000400        0x0
-                0x20000400                . = ALIGN (0x4)
-                0x20000400                __extab_start = .
+.ARM.extab      0x2000047c        0x0
+                0x2000047c                . = ALIGN (0x4)
+                0x2000047c                __extab_start = .
  *(.ARM.extab* .gnu.linkonce.armextab.*)
-                0x20000400                . = ALIGN (0x4)
-                0x20000400                __extab_end = .
+                0x2000047c                . = ALIGN (0x4)
+                0x2000047c                __extab_end = .
 
-.ARM.exidx      0x20000400        0x0
-                0x20000400                __exidx_start = .
+.ARM.exidx      0x2000047c        0x0
+                0x2000047c                __exidx_start = .
  *(.ARM.exidx* .gnu.linkonce.armexidx.*)
-                0x20000400                __exidx_end = .
+                0x2000047c                __exidx_end = .
 
-.eh_frame_hdr   0x20000400        0x0
-                0x20000400                . = ALIGN (0x4)
-                0x20000400                _eh_frame_hdr_start = .
+.eh_frame_hdr   0x2000047c        0x0
+                0x2000047c                . = ALIGN (0x4)
+                0x2000047c                _eh_frame_hdr_start = .
  *(.eh_frame_hdr)
-                0x20000400                . = ALIGN (0x4)
-                0x20000400                _eh_frame_hdr_end = .
+                0x2000047c                . = ALIGN (0x4)
+                0x2000047c                _eh_frame_hdr_end = .
 
-.eh_frame       0x20000400        0x0
-                0x20000400                . = ALIGN (0x4)
-                0x20000400                _eh_frame_start = .
+.eh_frame       0x2000047c        0x0
+                0x2000047c                . = ALIGN (0x4)
+                0x2000047c                _eh_frame_start = .
  *(.eh_frame)
-                0x20000400                . = ALIGN (0x4)
-                0x20000400                _eh_frame_end = .
+                0x2000047c                . = ALIGN (0x4)
+                0x2000047c                _eh_frame_end = .
 LOAD ./ld/osc_api.syms
                 0x0800f000                k_osc_api_version = 0x800f000
                 0x0800f004                k_osc_api_platform = 0x800f004
@@ -159,17 +159,17 @@ LOAD c:/users/eric/logue-sdk/tools/gcc/gcc-arm-none-eabi-5_4-2016q3/bin/../lib/g
 END GROUP
 OUTPUT(build/supersaw.elf elf32-littlearm)
 
-.debug_info     0x00000000     0x1163
+.debug_info     0x00000000     0x1178
  .debug_info    0x00000000      0x6a4 ./build/obj/_unit.o
- .debug_info    0x000006a4      0xabf ./build/obj/supersaw.o
+ .debug_info    0x000006a4      0xad4 ./build/obj/supersaw.o
 
-.debug_abbrev   0x00000000      0x49d
+.debug_abbrev   0x00000000      0x48c
  .debug_abbrev  0x00000000      0x20e ./build/obj/_unit.o
- .debug_abbrev  0x0000020e      0x28f ./build/obj/supersaw.o
+ .debug_abbrev  0x0000020e      0x27e ./build/obj/supersaw.o
 
-.debug_loc      0x00000000      0x633
+.debug_loc      0x00000000      0x94b
  .debug_loc     0x00000000       0xb9 ./build/obj/_unit.o
- .debug_loc     0x000000b9      0x57a ./build/obj/supersaw.o
+ .debug_loc     0x000000b9      0x892 ./build/obj/supersaw.o
 
 .debug_aranges  0x00000000       0x40
  .debug_aranges
@@ -177,15 +177,15 @@ OUTPUT(build/supersaw.elf elf32-littlearm)
  .debug_aranges
                 0x00000020       0x20 ./build/obj/supersaw.o
 
-.debug_line     0x00000000      0x4ae
+.debug_line     0x00000000      0x4c3
  .debug_line    0x00000000      0x1d3 ./build/obj/_unit.o
- .debug_line    0x000001d3      0x2db ./build/obj/supersaw.o
+ .debug_line    0x000001d3      0x2f0 ./build/obj/supersaw.o
 
-.debug_str      0x00000000      0x96b
+.debug_str      0x00000000      0x972
  .debug_str     0x00000000      0x5ab ./build/obj/_unit.o
                                 0x62d (size before relaxing)
- .debug_str     0x000005ab      0x3c0 ./build/obj/supersaw.o
-                                0x6b7 (size before relaxing)
+ .debug_str     0x000005ab      0x3c7 ./build/obj/supersaw.o
+                                0x6be (size before relaxing)
 
 .comment        0x00000000       0x6e
  .comment       0x00000000       0x6e ./build/obj/_unit.o
@@ -199,12 +199,12 @@ OUTPUT(build/supersaw.elf elf32-littlearm)
  .ARM.attributes
                 0x00000039       0x39 ./build/obj/supersaw.o
 
-.debug_frame    0x00000000      0x160
+.debug_frame    0x00000000      0x16c
  .debug_frame   0x00000000       0xa8 ./build/obj/_unit.o
- .debug_frame   0x000000a8       0xb8 ./build/obj/supersaw.o
+ .debug_frame   0x000000a8       0xc4 ./build/obj/supersaw.o
 
-.debug_ranges   0x00000000      0x1c8
- .debug_ranges  0x00000000      0x1c8 ./build/obj/supersaw.o
+.debug_ranges   0x00000000      0x160
+ .debug_ranges  0x00000000      0x160 ./build/obj/supersaw.o
 
 Cross Reference Table
 
