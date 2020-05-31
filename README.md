@@ -1,10 +1,12 @@
 # Supersaw
 Korg Prologue Custom OSC to offer 12xSaw/Square wave oscillator + noise
 
-controls:
+controls
+
 shape knob - SAW <-> SQR
 
-edit section:
+edit section
+
 VOICES
 number of voices to use, this is per actual voice of multi engine
 
